@@ -1,39 +1,21 @@
 import streamlit as st
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
+import pickle
 
-# Load dataset
-df = pd.read_csv("loan.csv")
+# ---------------------------
+# LOAD MODEL & LABEL ENCODERS
+# ---------------------------
+with open("loan.pkl", "rb") as f:
+    model = pickle.load(f)
 
-# Encode categorical variables
-categorical_cols = ["gender", "occupation", "education_level", "marital_status", "loan_status"]
-label_encoders = {}
-for col in categorical_cols:
-    le = LabelEncoder()
-    df[col] = le.fit_transform(df[col])
-    label_encoders[col] = le
+with open("encoders.pkl", "rb") as f:
+    label_encoders = pickle.load(f)
 
-# Features and target
-X = df.drop("loan_status", axis=1)
-y = df["loan_status"]
-
-# Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Train model
-model = LogisticRegression(max_iter=1000)
-model.fit(X_train, y_train)
-
-# Accuracy
-y_pred = model.predict(X_test)
-acc = accuracy_score(y_test, y_pred)
-
-# Streamlit UI
+# ---------------------------
+# STREAMLIT UI
+# ---------------------------
 st.title("💳 Loan Prediction App")
-st.write(f"Model Accuracy: {acc*100:.2f}%")
+st.write("This app predicts loan approval using a pre-trained ML model.")
 
 st.header("Enter Applicant Details")
 
@@ -45,7 +27,9 @@ marital_status = st.selectbox("Marital Status", label_encoders["marital_status"]
 income = st.number_input("Annual Income", min_value=10000, max_value=200000, value=50000)
 credit_score = st.number_input("Credit Score", min_value=300, max_value=850, value=650)
 
-# Encode inputs
+# ---------------------------
+# ENCODE USER INPUT
+# ---------------------------
 input_data = pd.DataFrame({
     "age": [age],
     "gender": [label_encoders["gender"].transform([gender])[0]],
@@ -56,11 +40,14 @@ input_data = pd.DataFrame({
     "credit_score": [credit_score]
 })
 
-# Prediction
+# ---------------------------
+# PREDICT
+# ---------------------------
 if st.button("Predict Loan Status"):
     prediction = model.predict(input_data)[0]
     result = label_encoders["loan_status"].inverse_transform([prediction])[0]
-    if result == "Approved":
+
+    if result.lower() == "approved":
         st.success("✅ Loan Approved")
     else:
         st.error("❌ Loan Denied")
