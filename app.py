@@ -42,6 +42,7 @@ st.title("💳 Loan Prediction Dashboard")
 st.write(f"📊 Model Accuracy: **{acc*100:.2f}%**")
 
 st.sidebar.header("Enter Applicant Details")
+name = st.sidebar.text_input("Applicant Name", value="")  # NEW FIELD
 age = st.sidebar.number_input("Age", min_value=18, max_value=70, value=30)
 gender = st.sidebar.selectbox("Gender", label_encoders["gender"].classes_)
 occupation = st.sidebar.selectbox("Occupation", label_encoders["occupation"].classes_)
@@ -68,20 +69,20 @@ if st.sidebar.button("Predict Loan Status"):
     prediction = model.predict(input_data)[0]
     result = label_encoders["loan_status"].inverse_transform([prediction])[0]
 
-    # Emoji feedback + Congratulations
+    # Emoji feedback + Personalized Congratulations
     if result == "Approved":
         st.success("🎉 Loan Approved ✅")
         st.balloons()
         congrats_messages = [
-            "👏 Congratulations! Your loan has been approved. Wishing you success ahead!",
-            "🌟 Fantastic news! Your loan approval is confirmed. Time to achieve your goals!",
-            "🚀 Approved! Your financial journey just got a boost. Congratulations!",
-            "🥳 Great job! Loan approved — exciting times ahead!"
+            f"👏 Congratulations {name}! Your loan has been approved. Wishing you success ahead!",
+            f"🌟 Fantastic news {name}! Your loan approval is confirmed. Time to achieve your goals!",
+            f"🚀 Approved! {name}, your financial journey just got a boost. Congratulations!",
+            f"🥳 Great job {name}! Loan approved — exciting times ahead!"
         ]
         st.write(random.choice(congrats_messages))
     else:
         st.error("😔 Loan Denied ❌")
-        st.write("Please review your details and try again.")
+        st.write(f"Sorry {name}, please review your details and try again.")
 
     # Gamified loan score
     loan_score = int((income/200000)*50 + (credit_score/850)*50)
@@ -90,9 +91,9 @@ if st.sidebar.button("Predict Loan Status"):
     # Prediction history
     if "history" not in st.session_state:
         st.session_state["history"] = []
-    st.session_state["history"].append((age, income, credit_score, result))
+    st.session_state["history"].append((name, age, income, credit_score, result))
     st.subheader("📜 Prediction History")
-    st.write(pd.DataFrame(st.session_state["history"], columns=["Age","Income","Credit Score","Result"]))
+    st.write(pd.DataFrame(st.session_state["history"], columns=["Name","Age","Income","Credit Score","Result"]))
 
     # Random fun fact
     facts = [
